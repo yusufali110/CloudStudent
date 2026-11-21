@@ -6,19 +6,23 @@ A containerized Student Management System built using Docker, Node.js, MongoDB, 
 
 CloudStudent is a 3-tier application designed to demonstrate modern DevOps practices, containerization and Kubernetes deployment.
 
+## Application Dashboard
+
+![CloudStudent Dashboard](docs/screenshots/dashboard.png)
+
 ## Architecture
 
 ```text
-          User
-           |
-           v
-      Frontend (NGINX)
-           |
-           v
-      Backend (Node.js)
-           |
-           v
-       MongoDB
+             User
+               |
+               v
+       Frontend (NGINX)
+               |
+               v
+       Backend (Node.js)
+               |
+               v
+            MongoDB
 ```
 
 ## Technologies Used
@@ -53,6 +57,8 @@ CloudStudent/
 ├── backend/
 ├── frontend/
 ├── docs/
+│   └── screenshots/
+│       └── dashboard.png
 ├── k8s/
 ├── k8s-local/
 ├── scripts/
@@ -64,6 +70,7 @@ CloudStudent/
 ## Run Locally
 
 ### Prerequisites
+
 - Docker Desktop
 - Git
 
@@ -73,13 +80,13 @@ CloudStudent/
 docker compose up -d --build
 ```
 
-Check containers:
+### Check Containers
 
 ```bash
 docker compose ps
 ```
 
-Stop application:
+### Stop Application
 
 ```bash
 docker compose down
@@ -108,6 +115,6 @@ This project helped me practice:
 
 **Yusuf Khayyat**
 
-GitHub: https://github.com/yusufali110
+GitHub: [yusufali110](https://github.com/yusufali110)
 
-Project: https://github.com/yusufali110/CloudStudent
+Project: [CloudStudent](https://github.com/yusufali110/CloudStudent)
