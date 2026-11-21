@@ -1,0 +1,68 @@
+# ==============================================================================
+# Learning Example: ReplicationController (Legacy Predecessor to Deployments)
+# ==============================================================================
+# Educational Concept & History:
+# ------------------------------------------------------------------------------
+# In the early days of Kubernetes (v1.0), the 'ReplicationController' (RC) was the
+# primary mechanism to ensure that a specified number of Pod replicas were running.
+#
+# Evolution:
+#   Phase 1: ReplicationController (Legacy)
+#            Only supports equality-based selectors:
+#            selector:
+#              app: demo
+#
+#   Phase 2: ReplicaSet (Modern Pod Controller)
+#            Supports set-based selectors:
+#            selector:
+#              matchExpressions:
+#                - {key: tier, operator: In, values: [frontend, web]}
+#
+#   Phase 3: Deployment (Current Industry Standard)
+#            A higher-level abstraction that manages ReplicaSets, enabling:
+#            - Declarative Rolling Updates with zero downtime
+#            - Rollback history (kubectl rollout undo)
+#            - Pause / Resume deployments
+#
+# Why this file is provided:
+# To help you understand certification exam questions (CKA/CKAD) and legacy codebases.
+# For all production workloads, always use 'apps/v1' Deployments!
+# ==============================================================================
+
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: cloudstudent-legacy-rc
+  namespace: cloudstudent
+  labels:
+    app.kubernetes.io/name: cloudstudent-rc-demo
+    app.kubernetes.io/component: educational-demo
+spec:
+  replicas: 1
+  # Notice: Only supports simple key-value equality selectors, NOT matchLabels/matchExpressions!
+  selector:
+    app: cloudstudent-rc-demo
+  template:
+    metadata:
+      labels:
+        app: cloudstudent-rc-demo
+    spec:
+      containers:
+        - name: rc-echo
+          image: busybox:1.36
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "ReplicationController demo running. Active PID: $$"
+              while true; do
+                echo "[RC-Demo] Pod kept alive by legacy ReplicationController $(date)"
+                sleep 60
+              done
+          resources:
+            requests:
+              cpu: "10m"
+              memory: "16Mi"
+            limits:
+              cpu: "30m"
+              memory: "32Mi"

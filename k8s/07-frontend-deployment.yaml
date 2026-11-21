@@ -1,0 +1,102 @@
+# ==============================================================================
+# Frontend Web Tier: NGINX Static Web Server Deployment & Service
+# ==============================================================================
+# Educational Note:
+# - Service Type: By default, we use 'ClusterIP' to route traffic through an
+#   AWS Application Load Balancer (ALB) via the AWS Load Balancer Controller.
+# - If you do not have an Ingress Controller installed, you can simply change
+#   'type: ClusterIP' to 'type: LoadBalancer' to provision an AWS Network Load Balancer (NLB).
+# ==============================================================================
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+  namespace: cloudstudent
+  labels:
+    app.kubernetes.io/name: cloudstudent
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/tier: web
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: cloudstudent
+    app.kubernetes.io/component: frontend
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-deployment
+  namespace: cloudstudent
+  labels:
+    app.kubernetes.io/name: cloudstudent
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/tier: web
+spec:
+  replicas: 2
+  revisionHistoryLimit: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cloudstudent
+      app.kubernetes.io/component: frontend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cloudstudent
+        app.kubernetes.io/component: frontend
+        app.kubernetes.io/tier: web
+    spec:
+      serviceAccountName: cloudstudent-sa
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app.kubernetes.io/component
+                      operator: In
+                      values: ["frontend"]
+                topologyKey: "kubernetes.io/hostname"
+      containers:
+        - name: frontend
+          # Replace with your Amazon ECR URI before deploying to AWS EKS:
+          # Format: <account-id>.dkr.ecr.<region>.amazonaws.com/cloudstudent-frontend:latest
+          image: cloudstudent-frontend:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 80
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "150m"
+              memory: "128Mi"
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            timeoutSeconds: 3
+            failureThreshold: 3

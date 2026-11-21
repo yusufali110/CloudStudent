@@ -1,0 +1,76 @@
+# ==============================================================================
+# Learning Example: DaemonSet (Node Health & Log Forwarder)
+# ==============================================================================
+# Educational Concept:
+# What is a DaemonSet?
+# Unlike a Deployment (which manages an arbitrary replica count across the cluster),
+# a DaemonSet ensures that EVERY eligible EC2 worker node runs exactly ONE copy
+# of the specified Pod.
+#
+# Real-World Production AWS EKS Examples:
+# 1. AWS CloudWatch FluentBit agent (forwarding container logs to CloudWatch Logs).
+# 2. Prometheus 'node-exporter' (scraping hardware/kernel metrics from each EC2 instance).
+# 3. AWS VPC CNI ('aws-node') managing secondary IP addresses on Elastic Network Interfaces.
+# 4. AWS EBS CSI Driver Node plugin ('ebs-csi-node') attaching EBS volumes to EC2 instances.
+#
+# Capacity & Cost Impact:
+# When you scale your EKS node group from 2 to 5 nodes, the DaemonSet automatically
+# spins up 3 new pods (one on each new node), consuming node memory and CPU.
+# ==============================================================================
+
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: cloudstudent-node-monitor
+  namespace: cloudstudent
+  labels:
+    app.kubernetes.io/name: cloudstudent
+    app.kubernetes.io/component: monitoring
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cloudstudent
+      app.kubernetes.io/component: monitoring
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cloudstudent
+        app.kubernetes.io/component: monitoring
+    spec:
+      serviceAccountName: cloudstudent-sa
+      # Toleration to allow running on tainted control-plane or spot instances if needed
+      tolerations:
+        - key: node-role.kubernetes.io/master
+          operator: Exists
+          effect: NoSchedule
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+      containers:
+        - name: node-watcher
+          image: alpine:3.19
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "[DaemonSet] Starting Node Monitor Agent on host: $NODE_NAME"
+              while true; do
+                echo "[$(date '+%Y-%m-%d %H:%M:%S')] Node: $NODE_NAME | Memory & System Heartbeat OK"
+                sleep 60
+              done
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          resources:
+            requests:
+              cpu: "10m"
+              memory: "16Mi"
+            limits:
+              cpu: "50m"
+              memory: "32Mi"
+          securityContext:
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000

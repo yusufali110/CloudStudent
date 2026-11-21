@@ -1,0 +1,29 @@
+# ==============================================================================
+# StorageClass Configuration for AWS EBS CSI Driver
+# ==============================================================================
+# Educational Note:
+# Why not use manually created local PersistentVolumes (PVs)?
+# 1. AWS EKS nodes reside across multiple Availability Zones (AZs).
+# 2. An Amazon EBS volume is locked to the specific AZ where it is created.
+# 3. 'volumeBindingMode: WaitForFirstConsumer' delays volume provisioning until
+#    the MongoDB Pod is scheduled to a specific node, ensuring the EBS volume
+#    is created in the exact same AZ as the pod!
+# 4. 'gp3' is AWS's modern general-purpose SSD, offering 20% lower cost and
+#    independent IOPS/throughput configuration compared to legacy gp2.
+# ==============================================================================
+
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: ebs-gp3-sc
+  labels:
+    app.kubernetes.io/name: cloudstudent
+    app.kubernetes.io/component: storage
+provisioner: ebs.csi.aws.com
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
+reclaimPolicy: Delete # Use 'Retain' in enterprise production to prevent data loss on PVC deletion
+parameters:
+  type: gp3
+  fsType: ext4
+  encrypted: "true"

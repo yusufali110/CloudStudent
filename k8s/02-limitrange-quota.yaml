@@ -1,0 +1,56 @@
+# ==============================================================================
+# LimitRange and ResourceQuota for Cost Control & Cluster Stability
+# ==============================================================================
+# Educational Note:
+# In cloud environments like AWS EKS, unconstrained Pods can consume all node
+# resources, triggering accidental EC2 node auto-scaling and steep AWS bills.
+# - LimitRange: Sets default request/limits for any pod that lacks explicit values.
+# - ResourceQuota: Hard cap on total aggregate resources consumed by the namespace.
+# ==============================================================================
+
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: cloudstudent-limit-range
+  namespace: cloudstudent
+  labels:
+    app.kubernetes.io/name: cloudstudent
+    app.kubernetes.io/component: governance
+spec:
+  limits:
+    - type: Container
+      default:
+        cpu: "250m"
+        memory: "256Mi"
+      defaultRequest:
+        cpu: "100m"
+        memory: "128Mi"
+      max:
+        cpu: "1000m"
+        memory: "1Gi"
+      min:
+        cpu: "50m"
+        memory: "64Mi"
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: cloudstudent-quota
+  namespace: cloudstudent
+  labels:
+    app.kubernetes.io/name: cloudstudent
+    app.kubernetes.io/component: governance
+spec:
+  hard:
+    # Compute resource limits for the entire namespace
+    requests.cpu: "2"
+    requests.memory: "3Gi"
+    limits.cpu: "4"
+    limits.memory: "6Gi"
+    
+    # Object counts to prevent accidental runaway resource spawning
+    pods: "15"
+    services: "5"
+    services.loadbalancers: "1"
+    persistentvolumeclaims: "3"
+    requests.storage: "20Gi"

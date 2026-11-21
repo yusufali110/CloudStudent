@@ -1,0 +1,56 @@
+# ==============================================================================
+# Role-Based Access Control (RBAC)
+# ==============================================================================
+# Educational Note:
+# In Kubernetes, default ServiceAccounts often lack or have excessive permissions.
+# Best practice is to create dedicated, least-privileged ServiceAccounts for each tier.
+# On AWS EKS, this ServiceAccount can also be linked to an AWS IAM Role via
+# IAM Roles for Service Accounts (IRSA) using the 'eks.amazonaws.com/role-arn' annotation.
+# ==============================================================================
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cloudstudent-sa
+  namespace: cloudstudent
+  labels:
+    app.kubernetes.io/name: cloudstudent
+    app.kubernetes.io/component: rbac
+  annotations:
+    # When using AWS IRSA, uncomment and provide your IAM Role ARN:
+    # eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/CloudStudentAppRole
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: cloudstudent-app-role
+  namespace: cloudstudent
+  labels:
+    app.kubernetes.io/name: cloudstudent
+    app.kubernetes.io/component: rbac
+rules:
+  # Allow the application to read its own ConfigMaps and Secrets
+  - apiGroups: [""]
+    resources: ["configmaps", "secrets"]
+    verbs: ["get", "list"]
+  # Allow pod liveness and readiness inspection
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: cloudstudent-app-rolebinding
+  namespace: cloudstudent
+  labels:
+    app.kubernetes.io/name: cloudstudent
+    app.kubernetes.io/component: rbac
+subjects:
+  - kind: ServiceAccount
+    name: cloudstudent-sa
+    namespace: cloudstudent
+roleRef:
+  kind: Role
+  name: cloudstudent-app-role
+  apiGroup: rbac.authorization.k8s.io

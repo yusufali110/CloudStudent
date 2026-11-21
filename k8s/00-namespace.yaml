@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cloudstudent
+  labels:
+    app.kubernetes.io/name: cloudstudent
+    app.kubernetes.io/part-of: cloudstudent-system
+    environment: production

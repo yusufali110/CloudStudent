@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CloudStudent — Student Management System</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Header / Navigation -->
+  <header class="navbar">
+    <div class="nav-container">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+            <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="brand-title">CloudStudent</h1>
+          <span class="brand-subtitle">3-Tier AWS EKS Management Portal</span>
+        </div>
+      </div>
+
+      <div class="nav-badges">
+        <span class="tech-badge"><span class="badge-dot dot-aws"></span> AWS EKS</span>
+        <span class="tech-badge"><span class="badge-dot dot-k8s"></span> Kubernetes</span>
+        <span class="tech-badge"><span class="badge-dot dot-docker"></span> Docker</span>
+        <span class="tech-badge"><span class="badge-dot dot-mongo"></span> MongoDB</span>
+        <div id="healthIndicator" class="health-badge connecting" title="Checking backend health...">
+          <span class="status-pulse"></span>
+          <span id="healthStatusText">Checking API...</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="main-container">
+    <!-- Dashboard Statistics Section -->
+    <section class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon icon-students">
+          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+        </div>
+        <div class="stat-content">
+          <p class="stat-label">Total Students</p>
+          <h2 class="stat-value" id="statTotalStudents">0</h2>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon icon-courses">
+          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          </svg>
+        </div>
+        <div class="stat-content">
+          <p class="stat-label">Active Courses</p>
+          <h2 class="stat-value" id="statActiveCourses">0</h2>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon icon-top-course">
+          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          </svg>
+        </div>
+        <div class="stat-content">
+          <p class="stat-label">Top Enrolled Course</p>
+          <h2 class="stat-value small-text" id="statTopCourse">None</h2>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon icon-cluster">
+          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+            <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+            <line x1="6" y1="6" x2="6.01" y2="6"></line>
+            <line x1="6" y1="18" x2="6.01" y2="18"></line>
+          </svg>
+        </div>
+        <div class="stat-content">
+          <p class="stat-label">Database Tier</p>
+          <h2 class="stat-value small-text" id="statDbStatus">MongoDB StatefulSet</h2>
+        </div>
+      </div>
+    </section>
+
+    <!-- Student Management Section -->
+    <section class="content-card">
+      <div class="card-header">
+        <div class="card-header-left">
+          <h2 class="section-title">Student Directory</h2>
+          <p class="section-subtitle">Manage, search, and monitor student academic records</p>
+        </div>
+        <button class="btn btn-primary" id="openAddModalBtn">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Add New Student
+        </button>
+      </div>
+
+      <!-- Filter and Search Bar -->
+      <div class="filter-bar">
+        <div class="search-box">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="searchInput" placeholder="Search by name, enrollment no, or email...">
+          <button id="clearSearchBtn" class="btn-icon" style="display: none;" title="Clear search">&times;</button>
+        </div>
+
+        <div class="filter-controls">
+          <select id="courseFilter" class="select-input">
+            <option value="All">All Courses</option>
+            <option value="Computer Science">Computer Science</option>
+            <option value="Cloud Computing">Cloud Computing</option>
+            <option value="Cyber Security">Cyber Security</option>
+            <option value="AI & Data Science">AI & Data Science</option>
+            <option value="Information Technology">Information Technology</option>
+            <option value="Software Engineering">Software Engineering</option>
+          </select>
+
+          <select id="semesterFilter" class="select-input">
+            <option value="All">All Semesters</option>
+            <option value="1">Semester 1</option>
+            <option value="2">Semester 2</option>
+            <option value="3">Semester 3</option>
+            <option value="4">Semester 4</option>
+            <option value="5">Semester 5</option>
+            <option value="6">Semester 6</option>
+            <option value="7">Semester 7</option>
+            <option value="8">Semester 8</option>
+          </select>
+
+          <button id="refreshBtn" class="btn btn-secondary" title="Refresh Table">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <polyline points="23 4 23 10 17 10"></polyline>
+              <polyline points="1 20 1 14 7 14"></polyline>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      <!-- Students Table -->
+      <div class="table-responsive">
+        <table class="students-table" id="studentsTable">
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>Enrollment No</th>
+              <th>Email</th>
+              <th>Course</th>
+              <th>Semester</th>
+              <th>Registered</th>
+              <th class="text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="studentsTableBody">
+            <!-- Dynamic Content loaded by app.js -->
+            <tr class="placeholder-row">
+              <td colspan="7" class="loading-state">
+                <div class="spinner"></div>
+                <p>Loading student records...</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Table Footer / Count -->
+      <div class="table-footer">
+        <span id="recordCountText">Showing 0 students</span>
+      </div>
+    </section>
+  </main>
+
+  <!-- Add / Edit Student Modal -->
+  <div class="modal-backdrop" id="studentModal">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="modalTitle">Register New Student</h3>
+        <button class="modal-close" id="closeModalBtn">&times;</button>
+      </div>
+      <form id="studentForm" novalidate>
+        <input type="hidden" id="studentId">
+
+        <div class="form-group">
+          <label for="fullName">Full Name <span class="required">*</span></label>
+          <input type="text" id="fullName" class="form-control" placeholder="e.g. Alex Morgan" required minlength="3" maxlength="100">
+          <small class="form-error" id="fullNameError"></small>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group col-half">
+            <label for="enrollmentNo">Enrollment Number <span class="required">*</span></label>
+            <input type="text" id="enrollmentNo" class="form-control" placeholder="e.g. CS202601" required>
+            <small class="form-error" id="enrollmentNoError"></small>
+          </div>
+
+          <div class="form-group col-half">
+            <label for="email">Email Address <span class="required">*</span></label>
+            <input type="email" id="email" class="form-control" placeholder="e.g. alex@university.edu" required>
+            <small class="form-error" id="emailError"></small>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group col-half">
+            <label for="course">Course <span class="required">*</span></label>
+            <select id="course" class="form-control" required>
+              <option value="" disabled selected>Select course...</option>
+              <option value="Computer Science">Computer Science</option>
+              <option value="Cloud Computing">Cloud Computing</option>
+              <option value="Cyber Security">Cyber Security</option>
+              <option value="AI & Data Science">AI & Data Science</option>
+              <option value="Information Technology">Information Technology</option>
+              <option value="Software Engineering">Software Engineering</option>
+            </select>
+            <small class="form-error" id="courseError"></small>
+          </div>
+
+          <div class="form-group col-half">
+            <label for="semester">Semester <span class="required">*</span></label>
+            <select id="semester" class="form-control" required>
+              <option value="" disabled selected>Select semester...</option>
+              <option value="1">Semester 1</option>
+              <option value="2">Semester 2</option>
+              <option value="3">Semester 3</option>
+              <option value="4">Semester 4</option>
+              <option value="5">Semester 5</option>
+              <option value="6">Semester 6</option>
+              <option value="7">Semester 7</option>
+              <option value="8">Semester 8</option>
+            </select>
+            <small class="form-error" id="semesterError"></small>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="cancelModalBtn">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="saveStudentBtn">
+            <span class="btn-text">Save Student</span>
+            <div class="spinner-small" style="display: none;"></div>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div class="modal-backdrop" id="deleteModal">
+    <div class="modal-dialog modal-sm">
+      <div class="modal-header">
+        <h3 class="danger-title">Confirm Deletion</h3>
+        <button class="modal-close" id="closeDeleteModalBtn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="warning-icon-wrapper">
+          <svg width="40" height="40" fill="none" stroke="#ef4444" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+        </div>
+        <p>Are you sure you want to delete student <strong id="deleteStudentName">this student</strong>?</p>
+        <p class="modal-note">This action cannot be undone and will permanently remove the record from MongoDB.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="cancelDeleteBtn">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete Record</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- JavaScript -->
+  <script src="app.js"></script>
+</body>
+</html>

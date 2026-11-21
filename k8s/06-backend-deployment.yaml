@@ -1,0 +1,144 @@
+# ==============================================================================
+# Backend API Tier: Node.js Express Deployment & ClusterIP Service
+# ==============================================================================
+# Educational Note:
+# - Pod Anti-Affinity: Ensures replicas are placed on different EC2 worker nodes
+#   for High Availability (HA) so a single node failure won't bring down the API.
+# - Node Affinity: Restricts scheduling to compatible Linux x86_64 nodes.
+# - Probes:
+#     startupProbe: Gives the app time to connect to MongoDB.
+#     readinessProbe: Traffic is routed only after probe returns HTTP 200.
+#     livenessProbe: Automatically restarts frozen or deadlocked containers.
+# ==============================================================================
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+  namespace: cloudstudent
+  labels:
+    app.kubernetes.io/name: cloudstudent
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/tier: api
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 5000
+      targetPort: 5000
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: cloudstudent
+    app.kubernetes.io/component: backend
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment
+  namespace: cloudstudent
+  labels:
+    app.kubernetes.io/name: cloudstudent
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/tier: api
+spec:
+  replicas: 2
+  revisionHistoryLimit: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cloudstudent
+      app.kubernetes.io/component: backend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cloudstudent
+        app.kubernetes.io/component: backend
+        app.kubernetes.io/tier: api
+    spec:
+      serviceAccountName: cloudstudent-sa
+      # High Availability: Spread pods across distinct worker nodes
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app.kubernetes.io/component
+                      operator: In
+                      values: ["backend"]
+                topologyKey: "kubernetes.io/hostname"
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/os
+                    operator: In
+                    values: ["linux"]
+
+      # Example Toleration: if worker nodes have dedicated workload taints
+      tolerations:
+        - key: "workload"
+          operator: "Equal"
+          value: "apps"
+          effect: "NoSchedule"
+
+      containers:
+        - name: backend
+          # Replace with your Amazon ECR URI before deploying to AWS EKS:
+          # Format: <account-id>.dkr.ecr.<region>.amazonaws.com/cloudstudent-backend:latest
+          image: cloudstudent-backend:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 5000
+          env:
+            - name: PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: cloudstudent-config
+                  key: PORT
+            - name: NODE_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: cloudstudent-config
+                  key: NODE_ENV
+            - name: MONGODB_URI
+              valueFrom:
+                secretKeyRef:
+                  name: cloudstudent-secret
+                  key: MONGODB_URI
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "300m"
+              memory: "256Mi"
+          # Startup Probe: allows up to 60s (12 * 5s) for initial database connection
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            periodSeconds: 5
+            failureThreshold: 12
+          # Readiness Probe: ensures container serves requests only when healthy
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          # Liveness Probe: continuously monitors process health
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            periodSeconds: 15
+            timeoutSeconds: 3
+            failureThreshold: 3

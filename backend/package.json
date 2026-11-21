@@ -1,0 +1,33 @@
+{
+  "name": "cloudstudent-backend",
+  "version": "1.0.0",
+  "description": "REST API for CloudStudent - 3-Tier Student Management System",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [
+    "kubernetes",
+    "eks",
+    "docker",
+    "nodejs",
+    "express",
+    "mongodb"
+  ],
+  "author": "CloudStudent Team",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "mongoose": "^8.3.1",
+    "morgan": "^1.10.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
